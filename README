@@ -1,0 +1,2 @@
+The logjam utility serves as a bridge between programs with disparate
+logging practices and a central logging facility such as ELK.
