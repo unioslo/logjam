@@ -31,6 +31,7 @@
 #include "config.h"
 #endif
 
+#include <err.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -123,6 +124,7 @@ sock_open(lj_socket *s)
 
 	/* resolve and connect */
 	if ((s->sd = lj_connect(s->target, 0, 0)) < 0) {
+		warn("failed to connect to %s", s->target);
 		s->lasterr = errno;
 		goto fail;
 	}
@@ -132,14 +134,17 @@ sock_open(lj_socket *s)
 	if (s->tls.state == enabled) {
 		s->lasterr = EPROTO;
 		s->tls.state = failed;
-		if (gnutls_init(&s->tls.session, GNUTLS_CLIENT) != 0 ||
-		    gnutls_set_default_priority(s->tls.session) != 0 ||
-		    gnutls_credentials_set(s->tls.session, GNUTLS_CRD_CERTIFICATE, s->tls.cred) != 0)
+		if ((ret = gnutls_init(&s->tls.session, GNUTLS_CLIENT)) != 0 ||
+		    (ret = gnutls_set_default_priority(s->tls.session)) != 0 ||
+		    (ret = gnutls_credentials_set(s->tls.session, GNUTLS_CRD_CERTIFICATE, s->tls.cred)) != 0) {
+			warnx("TLS initialization for %s failed: %s", s->target, gnutls_strerror(ret));
 			goto fail;
+		}
 		/* SNI? */
 		gnutls_transport_set_int(s->tls.session, s->sd);
 		gnutls_handshake_set_timeout(s->tls.session, GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
 		while ((ret = gnutls_handshake(s->tls.session)) != 0) {
+			warnx("TLS handshake with %s failed: %s", s->target, gnutls_strerror(ret));
 			if (gnutls_error_is_fatal(ret))
 				goto fail;
 		}
@@ -213,6 +218,8 @@ sock_write(lj_socket *s, const void *buf, size_t len)
 			    ret == GNUTLS_E_AGAIN) {
 				/* retry */
 			} else {
+				warnx("TLS write to %s failed: %s", s->target,
+				    gnutls_strerror(ret));
 				s->tls.state = failed;
 				s->lasterr = EPROTO;
 				return (-1);
@@ -228,6 +235,7 @@ sock_write(lj_socket *s, const void *buf, size_t len)
 			/* retry */
 		} else {
 			s->lasterr = errno;
+			warn("write to %s failed", s->target);
 			return (-1);
 		}
 #endif
