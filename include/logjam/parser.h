@@ -50,5 +50,6 @@ struct lj_parser {
 };
 
 extern lj_parser lj_bind_parser;
+extern lj_parser lj_sshd_parser;
 
 #endif

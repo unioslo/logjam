@@ -9,6 +9,9 @@ logjam_LDADD	 = $(top_builddir)/lib/logjam/liblogjam.la $(JANSSON_LIBS) $(PTHREA
 # BIND log parser
 logjam_SOURCES	+= bind.c
 
+# SSHD log parser
+logjam_SOURCES	+= sshd.c
+
 # ELK submitter
 logjam_SOURCES	+= elk.c
 
