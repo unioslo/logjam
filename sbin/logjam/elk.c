@@ -131,6 +131,9 @@ lj_elk_json_callback(const char *buffer, size_t size, void *data)
 
 	if (size > SSIZE_MAX)
 		return (-1);
+#if NARGOTHROND
+	fwrite(buffer, size, 1, stderr);
+#endif
 	if (sock_write(ctx->sock, buffer, size) != (ssize_t)size)
 		return (-1);
 	return (0);
@@ -160,7 +163,7 @@ lj_elk_send(lj_sender_ctx *sctx, const lj_logobj *lo)
 		 * always send a newline, even if we failed to send the
 		 * record itself.
 		 */
-		if (sock_write(ctx->sock, "\n", 1) != 1)
+		if (lj_elk_json_callback("\n", 1, ctx) != 0)
 			ret = -1;
 	}
 	json_decref(obj);

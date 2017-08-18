@@ -138,17 +138,29 @@ logjam(void)
 	if ((lo_cirq = cirq_create(CIRQ_SIZE)) == NULL)
 		err(1, "failed to create output cirq");
 
+#if NARGOTHROND
+	/* create a reader that gets sshd logs from systemd */
+	if ((rctx = lj_systemd_reader.init("sshd.service")) == NULL)
+		err(1, "failed to initialize systemd reader");
+#else
 	/* create a reader that gets named logs from systemd */
 	if ((rctx = lj_systemd_reader.init("named.service")) == NULL)
 		err(1, "failed to initialize systemd reader");
+#endif
 	if ((r = pthread_create(&reader_thread, NULL, reader_main, rctx)) != 0) {
 		errno = -r;
 		err(1, "failed to start reader thread");
 	}
 
+#if NARGOTHROND
+	/* create a parser that understands SSHD query logs */
+	if ((pctx = lj_sshd_parser.init()) == NULL)
+		err(1, "failed to initialize SSHD parser");
+#else
 	/* create a parser that understands BIND query logs */
 	if ((pctx = lj_bind_parser.init()) == NULL)
 		err(1, "failed to initialize BIND parser");
+#endif
 	if ((r = pthread_create(&parser_thread, NULL, parser_main, pctx)) != 0) {
 		errno = -r;
 		err(1, "failed to start parser thread");
@@ -156,8 +168,18 @@ logjam(void)
 
 	/* creates a sender that submits to an ELK TCP receiver */
 	if ((sctx = lj_elk_sender.init("")) == NULL ||
-	    lj_elk_sender.set(sctx, "logowner", "hostmaster") != 0 ||
-	    lj_elk_sender.set(sctx, "application", "dns-resolv") != 0)
+#if NARGOTHROND
+	    lj_elk_sender.set(sctx, "server", "localhost:9999") != 0 ||
+	    lj_elk_sender.set(sctx, "logowner", "usit-test") != 0 ||
+//	    lj_elk_sender.set(sctx, "cert", "server.crt") != 0 ||
+	    lj_elk_sender.set(sctx, "application", "sshd") != 0 ||
+#else
+	    lj_elk_sender.set(sctx, "server", "logstash-prod03.uio.no:40070") != 0 ||
+//	    lj_elk_sender.set(sctx, "cert", "/root/elk/tcp.crt") != 0 ||
+	    lj_elk_sender.set(sctx, "logowner", "usit-hostmaster") != 0 ||
+	    lj_elk_sender.set(sctx, "application", "dns-resolv") != 0 ||
+#endif
+	    0)
 		err(1, "failed to initialize ELK sender");
 	if ((r = pthread_create(&sender_thread, NULL, sender_main, sctx)) != 0) {
 		errno = -r;
