@@ -31,6 +31,7 @@
 #include "config.h"
 #endif
 
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,10 +40,12 @@
 
 #include <logjam/log.h>
 #include <logjam/sender.h>
+#include <logjam/socket.h>
 
 typedef struct lj_elk_ctx {
 	struct LJ_SENDER_CTX;
 	json_t *template;
+	lj_socket *sock;
 } lj_elk_ctx;
 
 static lj_sender_ctx *
@@ -76,6 +79,34 @@ lj_elk_get(lj_sender_ctx *sctx, const char *key)
 }
 
 static int
+lj_elk_set_server(lj_sender_ctx *sctx, const char *server)
+{
+	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
+	lj_socket *sock;
+
+	if ((sock = sock_create(server)) == NULL)
+		return (-1);
+	if (sock_use_tls(sock) != 0) {
+		sock_destroy(sock);
+		return (-1);
+	}
+	if (ctx->sock != NULL)
+		sock_destroy(ctx->sock);
+	ctx->sock = sock;
+	return (0);
+}
+
+static int
+lj_elk_set_cert(lj_sender_ctx *sctx, const char *cert)
+{
+	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
+
+	if (ctx->sock == NULL)
+		return (-1);
+	return (sock_use_cert(ctx->sock, cert));
+}
+
+static int
 lj_elk_set(lj_sender_ctx *sctx, const char *key, const char *value)
 {
 	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
@@ -85,8 +116,24 @@ lj_elk_set(lj_sender_ctx *sctx, const char *key, const char *value)
 		if (json_object_set_new(ctx->template, key, json_string(value)) != 0)
 			return (-1);
 		return (0);
+	} else if (strcmp(key, "server") == 0) {
+		return (lj_elk_set_server(sctx, value));
+	} else if (strcmp(key, "cert") == 0) {
+		return (lj_elk_set_cert(sctx, value));
 	}
 	return (-1);
+}
+
+static int
+lj_elk_json_callback(const char *buffer, size_t size, void *data)
+{
+	lj_elk_ctx *ctx = (lj_elk_ctx *)data;
+
+	if (size > SSIZE_MAX)
+		return (-1);
+	if (sock_write(ctx->sock, buffer, size) != (ssize_t)size)
+		return (-1);
+	return (0);
 }
 
 static int
@@ -96,12 +143,26 @@ lj_elk_send(lj_sender_ctx *sctx, const lj_logobj *lo)
 	json_t *obj;
 	int ret;
 
-	ret = 0;
-	if ((obj = json_copy(lo->json)) == NULL ||
-	    json_object_update(obj, ctx->template) != 0 ||
-	    json_dumpf(obj, stderr, JSON_PRESERVE_ORDER) ||
-	    fprintf(stderr, "\n") < 0)
-		ret = -1;
+	if (!sock_connected(ctx->sock) && sock_reopen(ctx->sock) != 0)
+		return (-1);
+	ret = -1;
+	if ((obj = json_copy(lo->json)) != NULL &&
+	    json_object_update(obj, ctx->template) == 0) {
+		if (json_dump_callback(obj, lj_elk_json_callback,
+		    ctx, JSON_PRESERVE_ORDER | JSON_COMPACT) == 0)
+			ret = 0;
+		/*
+		 * Jansson's error reporting isn't very good, so we don't
+		 * know the exact source of the error.  If it occurred
+		 * within Jansson itself rather than at the connection or
+		 * encryption level, it is probably recoverable, but there
+		 * is a risk that we sent a partial record.  Therefore, we
+		 * always send a newline, even if we failed to send the
+		 * record itself.
+		 */
+		if (sock_write(ctx->sock, "\n", 1) != 1)
+			ret = -1;
+	}
 	json_decref(obj);
 	return (ret);
 }
@@ -112,6 +173,8 @@ lj_elk_fini(lj_sender_ctx *sctx)
 	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
 
 	json_decref(ctx->template);
+	if (ctx->sock != NULL)
+		sock_destroy(ctx->sock);
 	free(ctx);
 }
 
