@@ -6,8 +6,9 @@ liblogjam_la_SOURCES	 = \
 	cirq.c \
 	connect.c \
 	resolve.c \
+	socket.c \
 	strchrnul.c \
 	strlcat.c \
 	strlcpy.c
-liblogjam_la_CPPFLAGS	 = $(PTHREAD_CFLAGS)
-liblogjam_la_LIBADD	 = $(PTHREAD_LIBS)
+liblogjam_la_CPPFLAGS	 = $(GNUTLS_CFLAGS) $(PTHREAD_CFLAGS)
+liblogjam_la_LIBADD	 = $(GNUTLS_LIBS) $(PTHREAD_LIBS)

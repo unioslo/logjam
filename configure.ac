@@ -34,7 +34,7 @@ AC_TYPE_UINTPTR_T
 LT_PREREQ([2.2.6])
 LT_INIT()
 AC_PROG_INSTALL
-AX_PROG_PKG_CONFIG()
+AX_PROG_PKG_CONFIG
 
 # misc headers and functions
 AC_CHECK_FUNCS([strchrnul strlcat strlcpy])
@@ -52,6 +52,11 @@ AX_PTHREAD([], [
 
 # json
 AX_PKG_CONFIG_REQUIRE([jansson])
+
+# ssl
+AX_PKG_CONFIG_CHECK([gnutls], [], [
+    AC_MSG_WARN([GnuTLS not found, network encryption disabled.])
+])
 
 # cryb-test
 AX_PKG_CONFIG_CHECK([cryb-test],

@@ -7,6 +7,7 @@ noinst_HEADERS = \
 	logjam/reader.h \
 	logjam/resolve.h \
 	logjam/sender.h \
+	logjam/socket.h \
 	logjam/strchrnul.h \
 	logjam/strlcat.h \
 	logjam/strlcpy.h \
