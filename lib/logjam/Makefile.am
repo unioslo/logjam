@@ -4,6 +4,8 @@ lib_LTLIBRARIES		 = liblogjam.la
 
 liblogjam_la_SOURCES	 = \
 	cirq.c \
+	connect.c \
+	resolve.c \
 	strchrnul.c \
 	strlcat.c \
 	strlcpy.c
