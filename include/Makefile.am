@@ -5,5 +5,8 @@ noinst_HEADERS = \
 	logjam/parser.h \
 	logjam/reader.h \
 	logjam/sender.h \
+	logjam/strchrnul.h \
+	logjam/strlcat.h \
+	logjam/strlcpy.h \
 	\
 	logjam/logjam.h

@@ -8,9 +8,13 @@ liblogjam = $(top_builddir)/lib/logjam/liblogjam.la
 
 TESTS =
 
-TESTS += t_cirq
-t_cirq_CPPFLAGS = $(CRYB_TEST_CFLAGS) $(PTHREAD_CFLAGS)
+TESTS += t_cirq t_strlcat t_strlcpy
+t_cirq_CFLAGS = $(CRYB_TEST_CFLAGS) $(PTHREAD_CFLAGS)
 t_cirq_LDADD = $(liblogjam) $(CRYB_TEST_LIBS) $(PTHREAD_LIBS)
+t_strlcat_CFLAGS = $(CRYB_TEST_CFLAGS)
+t_strlcat_LDADD = $(liblogjam) $(CRYB_TEST_LIBS)
+t_strlcpy_CFLAGS = $(CRYB_TEST_CFLAGS)
+t_strlcpy_LDADD = $(liblogjam) $(CRYB_TEST_LIBS)
 
 check_PROGRAMS = $(TESTS)
 

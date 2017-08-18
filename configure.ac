@@ -36,6 +36,9 @@ LT_INIT()
 AC_PROG_INSTALL
 AX_PROG_PKG_CONFIG()
 
+# misc headers and functions
+AC_CHECK_FUNCS([strchrnul strlcat strlcpy])
+
 # systemd
 AC_ARG_ENABLE([systemd],
     AS_HELP_STRING([--enable-systemd], [enable systemd support (default is NO)]),
