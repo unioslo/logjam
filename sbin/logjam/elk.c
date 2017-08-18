@@ -146,8 +146,18 @@ lj_elk_send(lj_sender_ctx *sctx, const lj_logobj *lo)
 	json_t *obj;
 	int ret;
 
+	/*
+	 * If we aren't already connected, or our existing connection has
+	 * failed, attempt to (re)connect.  We should probably have some
+	 * sort of exponential backoff here, and perhaps also move this
+	 * out of lj_elk_send() and into the sender thread's main loop.
+	 */
 	if (!sock_connected(ctx->sock) && sock_reopen(ctx->sock) != 0)
 		return (-1);
+
+	/*
+	 * Create and transmit json object
+	 */
 	ret = -1;
 	if ((obj = json_copy(lo->json)) != NULL &&
 	    json_object_update(obj, ctx->template) == 0) {
