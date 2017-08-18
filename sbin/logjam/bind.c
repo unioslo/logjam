@@ -96,14 +96,11 @@ lj_bind_parse(lj_parser_ctx *pctx, const lj_logline *ll)
 	regmatch_t pmatch[NMATCH];
 	lj_logobj *lo;
 
-	(void)ctx;
-	if (strncmp(ll->what, "queries: ", 9) != 0)
+	if (regexec(&ctx->re, ll->what, NMATCH, pmatch, 0) != 0)
 		return (NULL);
 	if ((lo = lj_logobj_create()) == NULL)
 		return (NULL);
 	if (lj_logobj_settime(lo, ll->when) != 0)
-		goto fail;
-	if (regexec(&ctx->re, ll->what, NMATCH, pmatch, 0) != 0)
 		goto fail;
 #define LO_SET_STRN(KEY, N)					\
 	lj_logobj_setstrn(lo, KEY, ll->what + pmatch[N].rm_so,	\
