@@ -34,6 +34,7 @@
 #include <err.h>
 #include <errno.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -131,6 +132,7 @@ logjam(void)
 	lj_sender_ctx *sctx;
 	int r;
 
+	signal(SIGPIPE, SIG_IGN);
 	quit = false;
 
 	if ((ll_cirq = cirq_create(CIRQ_SIZE)) == NULL)
