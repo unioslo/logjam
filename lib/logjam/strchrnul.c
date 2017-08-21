@@ -32,7 +32,9 @@
 #endif
 
 #include <stddef.h>
-#include <inttypes.h>
+#include <stdint.h>
+
+#include <logjam/strchrnul.h>
 
 /*
  * Like strchr(3), but returns the terminating NUL on failure.
