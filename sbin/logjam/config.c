@@ -32,11 +32,13 @@
 #endif
 
 #include <err.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <logjam/config.h>
 #include <logjam/flume.h>
+#include <logjam/logjam.h>
 #include <logjam/parser.h>
 #include <logjam/reader.h>
 #include <logjam/sender.h>
@@ -220,6 +222,12 @@ lj_config_unpack_root(const char *cfn, json_t *obj)
 			if (flume != NULL)
 				errx(1, "%s: multiple flumes are not yet supported", cfn);
 			flume = lj_config_unpack_flumes(cfn, value);
+		} else if (strcmp(key, "debug") == 0) {
+			if (json_typeof(value) != JSON_INTEGER ||
+			    json_integer_value(value) < 0 ||
+			    json_integer_value(value) > INT_MAX)
+				errx(1, "%s: debug must be a positive integer", cfn);
+			lj_debug_level = json_integer_value(value);
 		} else {
 			errx(1, "%s: unexpected key %s", cfn, key);
 		}
