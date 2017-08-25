@@ -1,7 +1,9 @@
 noinst_HEADERS = \
 	logjam/cirq.h \
+	logjam/config.h \
 	logjam/connect.h \
 	logjam/ctype.h \
+	logjam/flume.h \
 	logjam/log.h \
 	logjam/parser.h \
 	logjam/reader.h \

@@ -42,7 +42,9 @@
 #include <unistd.h>
 
 #include <logjam/cirq.h>
+#include <logjam/config.h>
 #include <logjam/log.h>
+#include <logjam/flume.h>
 #include <logjam/reader.h>
 #include <logjam/parser.h>
 #include <logjam/sender.h>
@@ -54,12 +56,12 @@ static volatile bool quit;
 static cirq *ll_cirq;
 static cirq *lo_cirq;
 
-static pthread_t reader_thread;
-static pthread_t parser_thread;
-static pthread_t sender_thread;
+static pthread_t rthr;
+static pthread_t pthr;
+static pthread_t sthr;
 
 static void *
-reader_main(void *arg)
+rthr_main(void *arg)
 {
 	lj_reader_ctx *ctx = arg;
 	lj_logline *ll;
@@ -68,19 +70,17 @@ reader_main(void *arg)
 		if ((ll = ctx->reader->read(ctx)) == NULL) {
 			if (errno != EAGAIN)
 				break;
-			// fprintf(stderr, "reader waiting for events...\n");
 			usleep(1000000);
 			continue;
 		}
 		if ((ll = cirq_put(ll_cirq, ll)) != NULL)
 			free(ll);
 	}
-	fprintf(stderr, "reader got signal to quit\n");
 	return (NULL);
 }
 
 static void *
-parser_main(void *arg)
+pthr_main(void *arg)
 {
 	lj_parser_ctx *ctx = arg;
 	lj_logline *ll;
@@ -90,7 +90,6 @@ parser_main(void *arg)
 		if ((ll = cirq_get(ll_cirq, 1000000)) == NULL) {
 			if (errno != ETIMEDOUT)
 				break;
-			// fprintf(stderr, "parser waiting for events...\n");
 			continue;
 		}
 		if ((lo = ctx->parser->parse(ctx, ll)) != NULL) {
@@ -99,12 +98,11 @@ parser_main(void *arg)
 		}
 		free(ll);
 	}
-	fprintf(stderr, "parser got signal to quit\n");
 	return (NULL);
 }
 
 static void *
-sender_main(void *arg)
+sthr_main(void *arg)
 {
 	lj_sender_ctx *ctx = arg;
 	lj_logobj *lo;
@@ -114,77 +112,43 @@ sender_main(void *arg)
 		if ((lo = cirq_get(lo_cirq, 1000000)) == NULL) {
 			if (errno != ETIMEDOUT)
 				break;
-			// fprintf(stderr, "sender waiting for events...\n");
 			continue;
 		}
 		ctx->sender->send(ctx, lo);
 		lj_logobj_destroy(lo);
 	}
-	fprintf(stderr, "sender got signal to quit\n");
 	return (NULL);
 }
 
 void
 logjam(void)
 {
-	lj_reader_ctx *rctx;
-	lj_parser_ctx *pctx;
-	lj_sender_ctx *sctx;
+	lj_flume *flume;
 	int r;
 
 	signal(SIGPIPE, SIG_IGN);
 	quit = false;
+
+	if ((flume = lj_configure(lj_config_file)) == NULL)
+		exit(1);
 
 	if ((ll_cirq = cirq_create(CIRQ_SIZE)) == NULL)
 		err(1, "failed to create input cirq");
 	if ((lo_cirq = cirq_create(CIRQ_SIZE)) == NULL)
 		err(1, "failed to create output cirq");
 
-#if NARGOTHROND
-	/* create a reader that gets sshd logs from systemd */
-	if ((rctx = lj_systemd_reader.init("sshd.service")) == NULL)
-		err(1, "failed to initialize systemd reader");
-#else
-	/* create a reader that gets named logs from systemd */
-	if ((rctx = lj_systemd_reader.init("named.service")) == NULL)
-		err(1, "failed to initialize systemd reader");
-#endif
-	if ((r = pthread_create(&reader_thread, NULL, reader_main, rctx)) != 0) {
-		errno = -r;
+	if ((r = pthread_create(&rthr, NULL, rthr_main, flume->rctx)) != 0) {
+		errno = r;
 		err(1, "failed to start reader thread");
 	}
 
-#if NARGOTHROND
-	/* create a parser that understands SSHD query logs */
-	if ((pctx = lj_sshd_parser.init()) == NULL)
-		err(1, "failed to initialize SSHD parser");
-#else
-	/* create a parser that understands BIND query logs */
-	if ((pctx = lj_bind_parser.init()) == NULL)
-		err(1, "failed to initialize BIND parser");
-#endif
-	if ((r = pthread_create(&parser_thread, NULL, parser_main, pctx)) != 0) {
-		errno = -r;
+	if ((r = pthread_create(&pthr, NULL, pthr_main, flume->pctx)) != 0) {
+		errno = r;
 		err(1, "failed to start parser thread");
 	}
 
-	/* creates a sender that submits to an ELK TCP receiver */
-	if ((sctx = lj_elk_sender.init("")) == NULL ||
-#if NARGOTHROND
-	    lj_elk_sender.set(sctx, "server", "localhost:9999") != 0 ||
-	    lj_elk_sender.set(sctx, "logowner", "usit-test") != 0 ||
-//	    lj_elk_sender.set(sctx, "cert", "server.crt") != 0 ||
-	    lj_elk_sender.set(sctx, "application", "sshd") != 0 ||
-#else
-	    lj_elk_sender.set(sctx, "server", "logstash-prod03.uio.no:40070") != 0 ||
-//	    lj_elk_sender.set(sctx, "cert", "/root/elk/tcp.crt") != 0 ||
-	    lj_elk_sender.set(sctx, "logowner", "usit-hostmaster") != 0 ||
-	    lj_elk_sender.set(sctx, "application", "dns-resolv") != 0 ||
-#endif
-	    0)
-		err(1, "failed to initialize ELK sender");
-	if ((r = pthread_create(&sender_thread, NULL, sender_main, sctx)) != 0) {
-		errno = -r;
+	if ((r = pthread_create(&sthr, NULL, sthr_main, flume->sctx)) != 0) {
+		errno = r;
 		err(1, "failed to start sender thread");
 	}
 
@@ -192,10 +156,8 @@ logjam(void)
 		/* nothing */ ;
 
 	quit = true;
-	pthread_join(reader_thread, NULL);
-	pthread_join(parser_thread, NULL);
-	pthread_join(sender_thread, NULL);
-	rctx->reader->fini(rctx);
-	pctx->parser->fini(pctx);
-	sctx->sender->fini(sctx);
+	pthread_join(rthr, NULL);
+	pthread_join(pthr, NULL);
+	pthread_join(sthr, NULL);
+	lj_flume_fini(flume);
 }

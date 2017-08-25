@@ -27,16 +27,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef LOGJAM_LOGJAM_H_INCLUDED
-#define LOGJAM_LOGJAM_H_INCLUDED
+#ifndef LOGJAM_CONFIG_H_INCLUDED
+#define LOGJAM_CONFIG_H_INCLUDED
 
-extern int lj_debug_level;
-#define debug(...)							\
-	do {								\
-		if (lj_debug_level > 0)					\
-			fprintf(stderr, __VA_ARGS__);			\
-	} while (0)
+#include <logjam/types.h>
 
-void logjam(void);
+extern const char *lj_config_file;
+
+lj_flume *lj_configure(const char *);
 
 #endif

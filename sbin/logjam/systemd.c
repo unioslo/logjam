@@ -33,6 +33,7 @@
 
 #include <sys/time.h>
 
+#include <err.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -45,6 +46,8 @@
 #include <logjam/ctype.h>
 #include <logjam/log.h>
 #include <logjam/reader.h>
+#include <logjam/strlcat.h>
+#include <logjam/strlcpy.h>
 
 #define TIMESTAMP_FIELD "_SOURCE_REALTIME_TIMESTAMP"
 #define MESSAGE_FIELD	"MESSAGE"
@@ -52,36 +55,23 @@
 typedef struct lj_systemd_ctx {
 	struct LJ_READER_CTX;
 	sd_journal		*j;
+	char			 unit[64];
 } lj_systemd_ctx;
 
 static lj_reader_ctx *
-lj_systemd_init(const char *loc)
+lj_systemd_init(void)
 {
-	char str[256];
 	lj_systemd_ctx *ctx;
 	int r;
 
-	/* prepare filter string */
-	if (snprintf(str, sizeof str, "_SYSTEMD_UNIT=%s", loc) >= (int)sizeof str) {
-		errno = EINVAL;
-		return (NULL);
-	}
 	if ((ctx = calloc(1, sizeof *ctx)) == NULL)
 		return (NULL);
 	ctx->reader = &lj_systemd_reader;
 	if ((r = sd_journal_open(&ctx->j,
-	    SD_JOURNAL_LOCAL_ONLY|SD_JOURNAL_SYSTEM)) != 0) {
-		// fprintf(stderr, "sd_journal_open(): %s\n", strerror(-r));
+	    SD_JOURNAL_LOCAL_ONLY|SD_JOURNAL_SYSTEM)) != 0)
 		goto sd_err;
-	}
-	if ((r = sd_journal_seek_tail(ctx->j)) != 0) {
-		// fprintf(stderr, "sd_journal_seek_tail(): %s\n", strerror(-r));
+	if ((r = sd_journal_seek_tail(ctx->j)) != 0)
 		goto sd_err;
-	}
-	if ((r = sd_journal_add_match(ctx->j, str, 0)) != 0) {
-		// fprintf(stderr, "sd_journal_add_match(): %s\n", strerror(-r));
-		goto sd_err;
-	}
 	return ((lj_reader_ctx *)ctx);
 sd_err:
 	free(ctx);
@@ -89,10 +79,53 @@ sd_err:
 	return (NULL);
 }
 
-static lj_logline *
-lj_systemd_read(lj_reader_ctx *sctx)
+static const char *
+lj_systemd_get(lj_reader_ctx *rctx, const char *key)
 {
-	lj_systemd_ctx *ctx = (lj_systemd_ctx *)sctx;
+	lj_systemd_ctx *ctx = (lj_systemd_ctx *)rctx;
+
+	if (strcmp(key, "unit") == 0) {
+		return (ctx->unit);
+	}
+	return (NULL);
+}
+
+static int
+lj_systemd_set_unit(lj_systemd_ctx *ctx, const char *unit)
+{
+	char match[256] = "_SYSTEMD_UNIT=";
+	int r;
+
+	if (strlen(unit) >= sizeof ctx->unit ||
+	    strlcat(match, unit, sizeof match) >= sizeof match)
+		return (-1);
+	/* point of no return */
+	ctx->unit[0] = '\0';
+	sd_journal_flush_matches(ctx->j);
+	if ((r = sd_journal_add_match(ctx->j, match, 0)) != 0 ||
+	    (r = sd_journal_seek_tail(ctx->j)) != 0) {
+		errno = -r;
+		return (-1);
+	}
+	strlcpy(ctx->unit, unit, sizeof ctx->unit);
+	return (0);
+}
+
+static int
+lj_systemd_set(lj_reader_ctx *rctx, const char *key, const char *value)
+{
+	lj_systemd_ctx *ctx = (lj_systemd_ctx *)rctx;
+
+	if (strcmp(key, "unit") == 0) {
+		return (lj_systemd_set_unit(ctx, value));
+	}
+	return (-1);
+}
+
+static lj_logline *
+lj_systemd_read(lj_reader_ctx *rctx)
+{
+	lj_systemd_ctx *ctx = (lj_systemd_ctx *)rctx;
 	struct timeval tv;
 	lj_logline *ll;
 	const char *str;
@@ -148,16 +181,19 @@ lj_systemd_read(lj_reader_ctx *sctx)
 }
 
 static void
-lj_systemd_fini(lj_reader_ctx *sctx)
+lj_systemd_fini(lj_reader_ctx *rctx)
 {
-	lj_systemd_ctx *ctx = (lj_systemd_ctx *)sctx;
+	lj_systemd_ctx *ctx = (lj_systemd_ctx *)rctx;
 
 	sd_journal_close(ctx->j);
+	free(ctx->unit);
 	free(ctx);
 }
 
 lj_reader lj_systemd_reader = {
 	.init	 = lj_systemd_init,
+	.get	 = lj_systemd_get,
+	.set	 = lj_systemd_set,
 	.read	 = lj_systemd_read,
 	.fini	 = lj_systemd_fini,
 };

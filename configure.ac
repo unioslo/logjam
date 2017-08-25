@@ -58,6 +58,13 @@ AX_PKG_CONFIG_CHECK([gnutls], [], [
     AC_MSG_WARN([GnuTLS not found, network encryption disabled.])
 ])
 
+# default configuration file
+_LJ_DEFAULT_CONFIG='${sysconfdir}/${PACKAGE_NAME}.conf'
+AC_ARG_WITH([default-config],
+    AS_HELP_STRING([--with-default-config=path], [default configuration file]),
+    [lj_default_config=withval], [lj_default_config=${_LJ_DEFAULT_CONFIG}])
+AC_SUBST([LJ_DEFAULT_CONFIG], [$lj_default_config])
+
 # cryb-test
 AX_PKG_CONFIG_CHECK([cryb-test],
   [AC_MSG_NOTICE([Cryb test framework found, unit tests enabled.])],

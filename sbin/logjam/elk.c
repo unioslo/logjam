@@ -39,6 +39,7 @@
 #include <jansson.h>
 
 #include <logjam/log.h>
+#include <logjam/logjam.h>
 #include <logjam/sender.h>
 #include <logjam/socket.h>
 
@@ -49,11 +50,10 @@ typedef struct lj_elk_ctx {
 } lj_elk_ctx;
 
 static lj_sender_ctx *
-lj_elk_init(const char *dest)
+lj_elk_init(void)
 {
 	lj_elk_ctx *ctx;
 
-	(void)dest;
 	if ((ctx = calloc(1, sizeof *ctx)) == NULL)
 		return (NULL);
 	ctx->sender = &lj_elk_sender;
@@ -79,9 +79,8 @@ lj_elk_get(lj_sender_ctx *sctx, const char *key)
 }
 
 static int
-lj_elk_set_server(lj_sender_ctx *sctx, const char *server)
+lj_elk_set_server(lj_elk_ctx *ctx, const char *server)
 {
-	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
 	lj_socket *sock;
 
 	if ((sock = sock_create(server)) == NULL)
@@ -97,9 +96,8 @@ lj_elk_set_server(lj_sender_ctx *sctx, const char *server)
 }
 
 static int
-lj_elk_set_cert(lj_sender_ctx *sctx, const char *cert)
+lj_elk_set_cert(lj_elk_ctx *ctx, const char *cert)
 {
-	lj_elk_ctx *ctx = (lj_elk_ctx *)sctx;
 
 	if (ctx->sock == NULL)
 		return (-1);
@@ -117,9 +115,9 @@ lj_elk_set(lj_sender_ctx *sctx, const char *key, const char *value)
 			return (-1);
 		return (0);
 	} else if (strcmp(key, "server") == 0) {
-		return (lj_elk_set_server(sctx, value));
+		return (lj_elk_set_server(ctx, value));
 	} else if (strcmp(key, "cert") == 0) {
-		return (lj_elk_set_cert(sctx, value));
+		return (lj_elk_set_cert(ctx, value));
 	}
 	return (-1);
 }
@@ -131,9 +129,8 @@ lj_elk_json_callback(const char *buffer, size_t size, void *data)
 
 	if (size > SSIZE_MAX)
 		return (-1);
-#if NARGOTHROND
-	fwrite(buffer, size, 1, stderr);
-#endif
+	if (lj_debug_level > 1)
+		fwrite(buffer, size, 1, stderr);
 	if (sock_write(ctx->sock, buffer, size) != (ssize_t)size)
 		return (-1);
 	return (0);

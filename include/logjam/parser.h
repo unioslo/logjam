@@ -32,22 +32,29 @@
 
 #include <logjam/types.h>
 
-typedef lj_parser_ctx *(*lj_parser_init)(void);
-typedef int (*lj_parser_set)(lj_parser_ctx *, const char *, const char *);
-typedef const char *(*lj_parser_get)(lj_parser_ctx *, const char *);
-typedef lj_logobj *(*lj_parser_parse)(lj_parser_ctx *, const lj_logline *);
-typedef void (*lj_parser_fini)(lj_parser_ctx *);
+typedef lj_parser_ctx *(*lj_parser_init_f)(void);
+typedef int (*lj_parser_set_f)(lj_parser_ctx *, const char *, const char *);
+typedef const char *(*lj_parser_get_f)(lj_parser_ctx *, const char *);
+typedef lj_logobj *(*lj_parser_parse_f)(lj_parser_ctx *, const lj_logline *);
+typedef void (*lj_parser_fini_f)(lj_parser_ctx *);
 
 #define LJ_PARSER_CTX { lj_parser *parser; }
 struct lj_parser_ctx LJ_PARSER_CTX;
 
 struct lj_parser {
-	lj_parser_init		 init;
-	lj_parser_get		 get;
-	lj_parser_set		 set;
-	lj_parser_parse		 parse;
-	lj_parser_fini		 fini;
+	lj_parser_init_f	 init;
+	lj_parser_get_f		 get;
+	lj_parser_set_f		 set;
+	lj_parser_parse_f	 parse;
+	lj_parser_fini_f	 fini;
 };
+
+static inline void
+lj_parser_fini(lj_parser_ctx *pctx)
+{
+
+	pctx->parser->fini(pctx);
+}
 
 extern lj_parser lj_bind_parser;
 extern lj_parser lj_sshd_parser;

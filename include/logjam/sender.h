@@ -32,22 +32,29 @@
 
 #include <logjam/types.h>
 
-typedef lj_sender_ctx *(*lj_sender_init)(const char *);
-typedef int (*lj_sender_set)(lj_sender_ctx *, const char *, const char *);
-typedef const char *(*lj_sender_get)(lj_sender_ctx *, const char *);
-typedef int (*lj_sender_send)(lj_sender_ctx *, const lj_logobj *);
-typedef void (*lj_sender_fini)(lj_sender_ctx *);
+typedef lj_sender_ctx *(*lj_sender_init_f)(void);
+typedef int (*lj_sender_set_f)(lj_sender_ctx *, const char *, const char *);
+typedef const char *(*lj_sender_get_f)(lj_sender_ctx *, const char *);
+typedef int (*lj_sender_send_f)(lj_sender_ctx *, const lj_logobj *);
+typedef void (*lj_sender_fini_f)(lj_sender_ctx *);
 
 #define LJ_SENDER_CTX { lj_sender *sender; }
 struct lj_sender_ctx LJ_SENDER_CTX;
 
 struct lj_sender {
-	lj_sender_init		 init;
-	lj_sender_get		 get;
-	lj_sender_set		 set;
-	lj_sender_send		 send;
-	lj_sender_fini		 fini;
+	lj_sender_init_f	 init;
+	lj_sender_get_f		 get;
+	lj_sender_set_f		 set;
+	lj_sender_send_f	 send;
+	lj_sender_fini_f	 fini;
 };
+
+static inline void
+lj_sender_fini(lj_sender_ctx *sctx)
+{
+
+	sctx->sender->fini(sctx);
+}
 
 extern lj_sender lj_elk_sender;
 

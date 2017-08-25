@@ -30,6 +30,7 @@
 #ifndef LOGJAM_TYPES_H_INCLUDED
 #define LOGJAM_TYPES_H_INCLUDED
 
+typedef struct lj_flume lj_flume;
 typedef struct lj_logline lj_logline;
 typedef struct lj_logobj lj_logobj;
 typedef struct lj_reader_ctx lj_reader_ctx;

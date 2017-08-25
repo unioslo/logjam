@@ -2,8 +2,8 @@ AM_CPPFLAGS	 = -I$(top_srcdir)/include
 
 sbin_PROGRAMS	 = logjam
 
-logjam_SOURCES	 = logjam.c logobj.c main.c
-logjam_CFLAGS	 = $(JANSSON_FLAGS) $(PTHREAD_CFLAGS)
+logjam_SOURCES	 = config.c flume.c logjam.c logobj.c main.c
+logjam_CFLAGS	 = $(JANSSON_FLAGS) $(PTHREAD_CFLAGS) -DLJ_DEFAULT_CONFIG=\"$(LJ_DEFAULT_CONFIG)\"
 logjam_LDADD	 = $(top_builddir)/lib/logjam/liblogjam.la $(JANSSON_LIBS) $(PTHREAD_LIBS)
 
 # BIND log parser

@@ -32,21 +32,21 @@
 #endif
 
 #include <errno.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <logjam/logjam.h>
+#include <logjam/config.h>
 
-bool debug_flag;
+int lj_debug_level;
 
 static void
 usage(void)
 {
 
-	fprintf(stderr, "usage: logjam [-d]\n");
+	fprintf(stderr, "usage: logjam [-d] [-c config]\n");
 	exit(1);
 }
 
@@ -55,10 +55,13 @@ main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "d")) != -1)
+	while ((opt = getopt(argc, argv, "c:d")) != -1)
 		switch (opt) {
+		case 'c':
+			lj_config_file = optarg;
+			break;
 		case 'd':
-			debug_flag = true;
+			++lj_debug_level;
 			break;
 		default:
 			usage();

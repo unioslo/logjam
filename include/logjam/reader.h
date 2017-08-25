@@ -32,22 +32,29 @@
 
 #include <logjam/types.h>
 
-typedef lj_reader_ctx *(*lj_reader_init)(const char *);
-typedef int (*lj_reader_set)(lj_reader_ctx *, const char *, const char *);
-typedef const char *(*lj_reader_get)(lj_reader_ctx *, const char *);
-typedef lj_logline *(*lj_reader_read)(lj_reader_ctx *);
-typedef void (*lj_reader_fini)(lj_reader_ctx *);
+typedef lj_reader_ctx *(*lj_reader_init_f)(void);
+typedef int (*lj_reader_set_f)(lj_reader_ctx *, const char *, const char *);
+typedef const char *(*lj_reader_get_f)(lj_reader_ctx *, const char *);
+typedef lj_logline *(*lj_reader_read_f)(lj_reader_ctx *);
+typedef void (*lj_reader_fini_f)(lj_reader_ctx *);
 
 #define LJ_READER_CTX { lj_reader *reader; }
 struct lj_reader_ctx LJ_READER_CTX;
 
 struct lj_reader {
-	lj_reader_init		 init;
-	lj_reader_get		 get;
-	lj_reader_set		 set;
-	lj_reader_read		 read;
-	lj_reader_fini		 fini;
+	lj_reader_init_f	 init;
+	lj_reader_get_f		 get;
+	lj_reader_set_f		 set;
+	lj_reader_read_f	 read;
+	lj_reader_fini_f	 fini;
 };
+
+static inline void
+lj_reader_fini(lj_reader_ctx *rctx)
+{
+
+	rctx->reader->fini(rctx);
+}
 
 #if HAVE_LIBSYSTEMD
 extern lj_reader lj_systemd_reader;

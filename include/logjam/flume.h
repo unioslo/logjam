@@ -27,16 +27,18 @@
  * SUCH DAMAGE.
  */
 
-#ifndef LOGJAM_LOGJAM_H_INCLUDED
-#define LOGJAM_LOGJAM_H_INCLUDED
+#ifndef LOGJAM_FLUME_H_INCLUDED
+#define LOGJAM_FLUME_H_INCLUDED
 
-extern int lj_debug_level;
-#define debug(...)							\
-	do {								\
-		if (lj_debug_level > 0)					\
-			fprintf(stderr, __VA_ARGS__);			\
-	} while (0)
+#include <logjam/types.h>
 
-void logjam(void);
+struct lj_flume {
+	lj_reader_ctx	*rctx;
+	lj_parser_ctx	*pctx;
+	lj_sender_ctx	*sctx;
+};
+
+lj_flume *lj_flume_init(void);
+void lj_flume_fini(lj_flume *);
 
 #endif
