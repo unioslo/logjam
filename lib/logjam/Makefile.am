@@ -9,6 +9,7 @@ liblogjam_la_SOURCES	 = \
 	socket.c \
 	strchrnul.c \
 	strlcat.c \
-	strlcpy.c
+	strlcpy.c \
+	strptime.c
 liblogjam_la_CFLAGS	 = $(GNUTLS_CFLAGS) $(PTHREAD_CFLAGS)
 liblogjam_la_LIBADD	 = $(GNUTLS_LIBS) $(PTHREAD_LIBS)

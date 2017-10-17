@@ -13,6 +13,7 @@ noinst_HEADERS = \
 	logjam/strchrnul.h \
 	logjam/strlcat.h \
 	logjam/strlcpy.h \
+	logjam/time.h \
 	logjam/types.h \
 	\
 	logjam/logjam.h
