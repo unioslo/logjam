@@ -379,6 +379,19 @@ label:
 				len--;
 			}
 
+			// added support for decimal seconds
+			if (*ptr == '.' && *buf == '.') {
+				ptr++;
+				buf++;
+				len = 3;
+				for (i = 0; len && *buf != 0 &&
+					 isdigit((unsigned char)*buf); buf++) {
+					/* ignore for now */
+					len--;
+				}
+			}
+			// end
+
 			if (c == 'M') {
 				if (i > 59)
 					return (NULL);
