@@ -64,9 +64,11 @@ lj_config_unpack_reader(const char *cfn, json_t *obj)
 	if (strcmp(str, "file") == 0) {
 		if ((rctx = lj_file_reader.init()) == NULL)
 			errx(1, "%s: failed to initialize file reader", cfn);
+#if HAVE_LIBSYSTEMD
 	} else if (strcmp(str, "systemd") == 0) {
 		if ((rctx = lj_systemd_reader.init()) == NULL)
 			errx(1, "%s: failed to initialize systemd reader", cfn);
+#endif
 	} else {
 		errx(1, "%s: unrecognized reader class '%s'", cfn, str);
 	}
