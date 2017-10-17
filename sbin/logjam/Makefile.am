@@ -15,6 +15,9 @@ logjam_SOURCES	+= sshd.c
 # ELK submitter
 logjam_SOURCES	+= elk.c
 
+# File source
+logjam_SOURCES	+= file.c
+
 # Systemd log source
 if HAVE_LIBSYSTEMD
 logjam_SOURCES	+= systemd.c

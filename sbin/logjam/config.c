@@ -61,7 +61,10 @@ lj_config_unpack_reader(const char *cfn, json_t *obj)
 		errx(1, "%s: reader has no class", cfn);
 	if ((str = json_string_value(value)) == NULL)
 		errx(1, "%s: reader class must be a string", cfn);
-	if (strcmp(str, "systemd") == 0) {
+	if (strcmp(str, "file") == 0) {
+		if ((rctx = lj_file_reader.init()) == NULL)
+			errx(1, "%s: failed to initialize file reader", cfn);
+	} else if (strcmp(str, "systemd") == 0) {
 		if ((rctx = lj_systemd_reader.init()) == NULL)
 			errx(1, "%s: failed to initialize systemd reader", cfn);
 	} else {

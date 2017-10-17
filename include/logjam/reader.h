@@ -56,6 +56,8 @@ lj_reader_fini(lj_reader_ctx *rctx)
 	rctx->reader->fini(rctx);
 }
 
+extern lj_reader lj_file_reader;
+
 #if HAVE_LIBSYSTEMD
 extern lj_reader lj_systemd_reader;
 #endif
