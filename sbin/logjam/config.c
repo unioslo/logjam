@@ -98,6 +98,9 @@ lj_config_unpack_parser(const char *cfn, json_t *obj)
 	if (strcmp(str, "sshd") == 0) {
 		if ((pctx = lj_sshd_parser.init()) == NULL)
 			errx(1, "%s: failed to initialize sshd parser", cfn);
+	} else if (strcmp(str, "bind") == 0) {
+		if ((pctx = lj_bind_parser.init()) == NULL)
+			errx(1, "%s: failed to initialize BIND parser", cfn);
 	} else {
 		errx(1, "%s: unrecognized parser class '%s'", cfn, str);
 	}
