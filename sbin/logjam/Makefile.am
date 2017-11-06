@@ -25,4 +25,4 @@ logjam_CFLAGS	+= $(LIBSYSTEMD_CFLAGS)
 logjam_LDADD	+= $(LIBSYSTEMD_LIBS)
 endif HAVE_LIBSYSTEMD
 
-dist_man1_MANS = logjam.8
+dist_man8_MANS = logjam.8
