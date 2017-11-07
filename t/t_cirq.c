@@ -52,6 +52,7 @@ static int
 t_cirq_put_get_simple(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 {
 	cirq *q;
+	size_t nput, nget, ndrop;
 	int ret;
 
 	ret = 1;
@@ -61,6 +62,10 @@ t_cirq_put_get_simple(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 	ret &= t_compare_sz(1, cirq_len(q));
 	ret &= t_compare_i(numbers[9], *(int *)cirq_get(q, 0));
 	ret &= t_compare_sz(0, cirq_len(q));
+	cirq_stat(q, &nput, &nget, &ndrop, 0);
+	ret &= t_compare_sz(1, nput) &
+	    t_compare_sz(1, nget) &
+	    t_compare_sz(0, ndrop);
 	cirq_destroy(q);
 	return (ret);
 }
@@ -69,6 +74,7 @@ static int
 t_cirq_put_get_full(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 {
 	cirq *q;
+	size_t nput, nget, ndrop;
 	int i, ret;
 
 	ret = 1;
@@ -80,6 +86,10 @@ t_cirq_put_get_full(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 	for (i = 0; i < 7; ++i)
 		ret &= t_compare_i(numbers[i], *(int *)cirq_get(q, 0));
 	ret &= t_compare_sz(0, cirq_len(q));
+	cirq_stat(q, &nput, &nget, &ndrop, 0);
+	ret &= t_compare_sz(7, nput) &
+	    t_compare_sz(7, nget) &
+	    t_compare_sz(0, ndrop);
 	cirq_destroy(q);
 	return (ret);
 }
@@ -88,6 +98,7 @@ static int
 t_cirq_put_get_overfull(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 {
 	cirq *q;
+	size_t nput, nget, ndrop;
 	int i, ret;
 
 	ret = 1;
@@ -99,6 +110,10 @@ t_cirq_put_get_overfull(char **desc CRYB_UNUSED, void *arg CRYB_UNUSED)
 	for (i = 3; i < 10; ++i)
 		ret &= t_compare_i(numbers[i], *(int *)cirq_get(q, 0));
 	ret &= t_compare_sz(0, cirq_len(q));
+	cirq_stat(q, &nput, &nget, &ndrop, 0);
+	ret &= t_compare_sz(10, nput) &
+	    t_compare_sz(7, nget) &
+	    t_compare_sz(3, ndrop);
 	cirq_destroy(q);
 	return (ret);
 }
