@@ -73,8 +73,10 @@ rthr_main(void *arg)
 			usleep(1000000);
 			continue;
 		}
-		if ((ll = cirq_put(li_cirq, ll)) != NULL)
+		if ((ll = cirq_put(li_cirq, ll)) != NULL) {
+			/* destroy displaced entry */
 			free(ll);
+		}
 	}
 	return (NULL);
 }
@@ -93,8 +95,10 @@ pthr_main(void *arg)
 			continue;
 		}
 		if ((lo = ctx->parser->parse(ctx, ll)) != NULL) {
-			if ((lo = cirq_put(lo_cirq, lo)) != NULL)
+			if ((lo = cirq_put(lo_cirq, lo)) != NULL) {
+				/* destroy displaced entry */
 				lj_logobj_destroy(lo);
+			}
 		}
 		free(ll);
 	}
