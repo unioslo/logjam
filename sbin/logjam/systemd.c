@@ -185,7 +185,6 @@ lj_systemd_fini(lj_reader_ctx *rctx)
 	lj_systemd_ctx *ctx = (lj_systemd_ctx *)rctx;
 
 	sd_journal_close(ctx->j);
-	free(ctx->unit);
 	free(ctx);
 }
 
