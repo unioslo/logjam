@@ -153,13 +153,9 @@ logstats(int clear)
 	uintmax_t nput, nget, ndrop;
 
 	cirq_stat(li_cirq, &nput, &nget, &ndrop, clear);
-	if (lj_debug_level > 0)
-		fprintf(stderr, "i: put %zu get %zu drop %zu\n",
-		    nput, nget, ndrop);
+	lj_debug(1, "i: put %zu get %zu drop %zu\n", nput, nget, ndrop);
 	cirq_stat(lo_cirq, &nput, &nget, &ndrop, clear);
-	if (lj_debug_level > 0)
-		fprintf(stderr, "o: put %zu get %zu drop %zu\n",
-		    nput, nget, ndrop);
+	lj_debug(1, "o: put %zu get %zu drop %zu\n", nput, nget, ndrop);
 }
 
 void

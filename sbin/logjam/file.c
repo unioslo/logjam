@@ -102,8 +102,6 @@ lj_file_reopen(lj_file_ctx *ctx, const char *path)
 	fstat(ctx->fd, &ctx->st);
 	memset(ctx->buf, 0, sizeof ctx->buf);
 	ctx->pos = ctx->endl = ctx->len = 0;
-	if (lj_debug_level > 0)
-		fprintf(stderr, "reading from %s\n", ctx->path);
 	return (0);
 }
 
@@ -173,7 +171,7 @@ lj_fillbuf(lj_file_ctx *ctx)
 		if (stat(ctx->path, &st) == 0) {
 			if (st.st_dev != ctx->st.st_dev ||
 			    st.st_ino != ctx->st.st_ino) {
-				/* print and clear stats */
+				lj_debug(1, "%s has been rotated\n", ctx->path);
 				raise(SIGUSR2);
 				if (lj_file_reopen(ctx, NULL) < 0)
 					return (-1);

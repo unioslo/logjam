@@ -31,9 +31,9 @@
 #define LOGJAM_DEBUG_H_INCLUDED
 
 extern int lj_debug_level;
-#define debug(...)							\
+#define lj_debug(lvl, ...)						\
 	do {								\
-		if (lj_debug_level > 0)					\
+		if (lj_debug_level >= (lvl))				\
 			fprintf(stderr, __VA_ARGS__);			\
 	} while (0)
 
