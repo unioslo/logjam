@@ -53,7 +53,7 @@
 
 static volatile bool quit;
 
-static cirq *ll_cirq;
+static cirq *li_cirq;
 static cirq *lo_cirq;
 
 static pthread_t rthr;
@@ -73,7 +73,7 @@ rthr_main(void *arg)
 			usleep(1000000);
 			continue;
 		}
-		if ((ll = cirq_put(ll_cirq, ll)) != NULL)
+		if ((ll = cirq_put(li_cirq, ll)) != NULL)
 			free(ll);
 	}
 	return (NULL);
@@ -87,7 +87,7 @@ pthr_main(void *arg)
 	lj_logobj *lo;
 
 	while (!quit) {
-		if ((ll = cirq_get(ll_cirq, 1000000)) == NULL) {
+		if ((ll = cirq_get(li_cirq, 1000000)) == NULL) {
 			if (errno != ETIMEDOUT)
 				break;
 			continue;
@@ -132,7 +132,7 @@ logjam(void)
 	if ((flume = lj_configure(lj_config_file)) == NULL)
 		exit(1);
 
-	if ((ll_cirq = cirq_create(CIRQ_SIZE)) == NULL)
+	if ((li_cirq = cirq_create(CIRQ_SIZE)) == NULL)
 		err(1, "failed to create input cirq");
 	if ((lo_cirq = cirq_create(CIRQ_SIZE)) == NULL)
 		err(1, "failed to create output cirq");
