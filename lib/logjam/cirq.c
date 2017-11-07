@@ -62,6 +62,10 @@ cirq_create(size_t nobj)
 {
 	cirq *c;
 
+	if (nobj < 2) {
+		errno = EINVAL;
+		return (NULL);
+	}
 	if ((c = calloc(1, sizeof *c + nobj * sizeof *c->obj)) == NULL)
 		return (NULL);
 	c->size = nobj;
