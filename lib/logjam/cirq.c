@@ -45,6 +45,9 @@ struct cirq {
 	size_t		 size;
 	unsigned int	 ridx;
 	unsigned int	 widx;
+	uintmax_t	 nput;
+	uintmax_t	 nget;
+	uintmax_t	 ndrop;
 	void		*obj[];
 };
 
@@ -135,8 +138,10 @@ cirq_put(cirq *c, void *obj)
 	if ((old = c->obj[idx]) != NULL) {
 		assert(c->ridx == idx);
 		c->ridx = c->widx;
+		c->ndrop++;
 	}
 	c->obj[idx] = obj;
+	c->nput++;
 	pthread_cond_signal(&c->cond);
 	pthread_mutex_unlock(&c->mutex);
 	return (old);
@@ -178,7 +183,25 @@ cirq_get(cirq *c, unsigned int timeout)
 	if ((obj = c->obj[c->ridx]) != NULL) {
 		c->obj[c->ridx] = NULL;
 		c->ridx = (c->ridx + 1) % c->size;
+		c->nget++;
 	}
 	pthread_mutex_unlock(&c->mutex);
 	return (obj);
+}
+
+/*
+ * Return and optionally clear statistics.
+ */
+void
+cirq_stat(cirq *c, uintmax_t *nput, uintmax_t *nget, uintmax_t *ndrop,
+    int clear)
+{
+
+	pthread_mutex_lock(&c->mutex);
+	*nput = c->nput;
+	*nget = c->nget;
+	*ndrop = c->ndrop;
+	if (clear)
+		c->nput = c->nget = c->ndrop = 0;
+	pthread_mutex_unlock(&c->mutex);
 }
