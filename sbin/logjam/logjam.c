@@ -154,11 +154,11 @@ logstats(int clear)
 
 	cirq_stat(li_cirq, &nput, &nget, &ndrop, clear);
 	if (lj_debug_level > 0)
-		fprintf(stderr, "i: p %zu get %zu drop %zu\n",
+		fprintf(stderr, "i: put %zu get %zu drop %zu\n",
 		    nput, nget, ndrop);
 	cirq_stat(lo_cirq, &nput, &nget, &ndrop, clear);
 	if (lj_debug_level > 0)
-		fprintf(stderr, "o: p %zu get %zu drop %zu\n",
+		fprintf(stderr, "o: put %zu get %zu drop %zu\n",
 		    nput, nget, ndrop);
 }
 
