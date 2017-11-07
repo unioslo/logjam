@@ -93,7 +93,7 @@ rthr_main(void *arg)
 		if ((ll = ctx->reader->read(ctx)) == NULL) {
 			if (errno != EAGAIN)
 				break;
-			usleep(1000000);
+			usleep(100000);
 			continue;
 		}
 		if ((ll = cirq_put(li_cirq, ll)) != NULL) {
@@ -112,7 +112,7 @@ pthr_main(void *arg)
 	lj_logobj *lo;
 
 	while (!quit) {
-		if ((ll = cirq_get(li_cirq, 1000000)) == NULL) {
+		if ((ll = cirq_get(li_cirq, 100000)) == NULL) {
 			if (errno != ETIMEDOUT)
 				break;
 			continue;
@@ -136,7 +136,7 @@ sthr_main(void *arg)
 
 	(void)ctx;
 	while (!quit) {
-		if ((lo = cirq_get(lo_cirq, 1000000)) == NULL) {
+		if ((lo = cirq_get(lo_cirq, 100000)) == NULL) {
 			if (errno != ETIMEDOUT)
 				break;
 			continue;
@@ -194,7 +194,7 @@ logjam(void)
 	}
 
 	while (!quit) {
-		usleep(1000000);
+		usleep(100000);
 		if (sigterm > 0) {
 			quit = true;
 			sigusr1++;
