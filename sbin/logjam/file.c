@@ -37,6 +37,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,7 @@
 #include <unistd.h>
 
 #include <logjam/ctype.h>
+#include <logjam/debug.h>
 #include <logjam/log.h>
 #include <logjam/reader.h>
 #include <logjam/strlcat.h>
@@ -100,6 +102,8 @@ lj_file_reopen(lj_file_ctx *ctx, const char *path)
 	fstat(ctx->fd, &ctx->st);
 	memset(ctx->buf, 0, sizeof ctx->buf);
 	ctx->pos = ctx->endl = ctx->len = 0;
+	if (lj_debug_level > 0)
+		fprintf(stderr, "reading from %s\n", ctx->path);
 	return (0);
 }
 
@@ -169,6 +173,8 @@ lj_fillbuf(lj_file_ctx *ctx)
 		if (stat(ctx->path, &st) == 0) {
 			if (st.st_dev != ctx->st.st_dev ||
 			    st.st_ino != ctx->st.st_ino) {
+				/* print and clear stats */
+				raise(SIGUSR2);
 				if (lj_file_reopen(ctx, NULL) < 0)
 					return (-1);
 			}
