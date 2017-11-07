@@ -45,9 +45,9 @@ struct cirq {
 	size_t		 size;
 	unsigned int	 ridx;
 	unsigned int	 widx;
-	uintmax_t	 nput;
-	uintmax_t	 nget;
-	uintmax_t	 ndrop;
+	size_t		 nput;
+	size_t		 nget;
+	size_t		 ndrop;
 	void		*obj[];
 };
 
@@ -193,7 +193,7 @@ cirq_get(cirq *c, unsigned int timeout)
  * Return and optionally clear statistics.
  */
 void
-cirq_stat(cirq *c, uintmax_t *nput, uintmax_t *nget, uintmax_t *ndrop,
+cirq_stat(cirq *c, size_t *nput, size_t *nget, size_t *ndrop,
     int clear)
 {
 

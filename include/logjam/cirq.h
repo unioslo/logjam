@@ -37,6 +37,6 @@ void cirq_destroy(cirq *);
 size_t cirq_len(cirq *);
 void *cirq_put(cirq *, void *);
 void *cirq_get(cirq *, unsigned int);
-void cirq_stat(cirq *, uintmax_t *, uintmax_t *, uintmax_t *, int);
+void cirq_stat(cirq *, size_t *, size_t *, size_t *, int);
 
 #endif
