@@ -51,6 +51,10 @@
 
 #define CIRQ_SIZE 1024
 
+static volatile sig_atomic_t sigusr1;
+static volatile sig_atomic_t sigusr2;
+static volatile sig_atomic_t sigterm;
+
 static volatile bool quit;
 
 static cirq *li_cirq;
@@ -59,6 +63,24 @@ static cirq *lo_cirq;
 static pthread_t rthr;
 static pthread_t pthr;
 static pthread_t sthr;
+
+static void
+sig_handler(int signo)
+{
+
+	switch (signo) {
+	case SIGINT:
+	case SIGTERM:
+		sigterm++;
+		break;
+	case SIGUSR1:
+		sigusr1++;
+		break;
+	case SIGUSR2:
+		sigusr2++;
+		break;
+	}
+}
 
 static void *
 rthr_main(void *arg)
@@ -124,6 +146,21 @@ sthr_main(void *arg)
 	return (NULL);
 }
 
+static void
+logstats(int clear)
+{
+	uintmax_t nput, nget, ndrop;
+
+	cirq_stat(li_cirq, &nput, &nget, &ndrop, clear);
+	if (lj_debug_level > 0)
+		fprintf(stderr, "i: p %zu get %zu drop %zu\n",
+		    nput, nget, ndrop);
+	cirq_stat(lo_cirq, &nput, &nget, &ndrop, clear);
+	if (lj_debug_level > 0)
+		fprintf(stderr, "o: p %zu get %zu drop %zu\n",
+		    nput, nget, ndrop);
+}
+
 void
 logjam(void)
 {
@@ -131,7 +168,10 @@ logjam(void)
 	int r;
 
 	signal(SIGPIPE, SIG_IGN);
-	quit = false;
+	signal(SIGINT, &sig_handler);
+	signal(SIGTERM, &sig_handler);
+	signal(SIGUSR1, &sig_handler);
+	signal(SIGUSR2, &sig_handler);
 
 	if ((flume = lj_configure(lj_config_file)) == NULL)
 		exit(1);
@@ -156,10 +196,19 @@ logjam(void)
 		err(1, "failed to start sender thread");
 	}
 
-	while (usleep(10000000) == 0)
-		/* nothing */ ;
+	while (!quit) {
+		usleep(1000000);
+		if (sigterm > 0) {
+			quit = true;
+			sigusr1++;
+			sigterm = 0;
+		}
+		if (sigusr1 + sigusr2 > 0) {
+			logstats(sigusr2);
+			sigusr1 = sigusr2 = 0;
+		}
+	}
 
-	quit = true;
 	pthread_join(rthr, NULL);
 	pthread_join(pthr, NULL);
 	pthread_join(sthr, NULL);
