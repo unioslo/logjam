@@ -27,9 +27,14 @@
  * SUCH DAMAGE.
  */
 
-#ifndef LOGJAM_LOGJAM_H_INCLUDED
-#define LOGJAM_LOGJAM_H_INCLUDED
+#ifndef LOGJAM_DEBUG_H_INCLUDED
+#define LOGJAM_DEBUG_H_INCLUDED
 
-void logjam(void);
+extern int lj_debug_level;
+#define debug(...)							\
+	do {								\
+		if (lj_debug_level > 0)					\
+			fprintf(stderr, __VA_ARGS__);			\
+	} while (0)
 
 #endif

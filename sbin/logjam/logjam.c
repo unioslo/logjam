@@ -43,6 +43,7 @@
 
 #include <logjam/cirq.h>
 #include <logjam/config.h>
+#include <logjam/debug.h>
 #include <logjam/log.h>
 #include <logjam/flume.h>
 #include <logjam/reader.h>

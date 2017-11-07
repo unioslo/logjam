@@ -37,8 +37,8 @@
 #include <string.h>
 
 #include <logjam/config.h>
+#include <logjam/debug.h>
 #include <logjam/flume.h>
-#include <logjam/logjam.h>
 #include <logjam/parser.h>
 #include <logjam/reader.h>
 #include <logjam/sender.h>

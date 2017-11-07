@@ -38,8 +38,8 @@
 
 #include <jansson.h>
 
+#include <logjam/debug.h>
 #include <logjam/log.h>
-#include <logjam/logjam.h>
 #include <logjam/sender.h>
 #include <logjam/socket.h>
 
