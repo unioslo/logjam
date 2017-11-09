@@ -4,9 +4,12 @@ noinst_HEADERS = \
 	logjam/connect.h \
 	logjam/ctype.h \
 	logjam/debug.h \
+	logjam/flopen.h \
 	logjam/flume.h \
+	logjam/log.h \
 	logjam/logobj.h \
 	logjam/parser.h \
+	logjam/pidfile.h \
 	logjam/reader.h \
 	logjam/resolve.h \
 	logjam/sender.h \
