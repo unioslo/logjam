@@ -5,7 +5,7 @@ noinst_HEADERS = \
 	logjam/ctype.h \
 	logjam/debug.h \
 	logjam/flume.h \
-	logjam/log.h \
+	logjam/logobj.h \
 	logjam/parser.h \
 	logjam/reader.h \
 	logjam/resolve.h \

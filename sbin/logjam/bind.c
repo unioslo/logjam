@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <logjam/log.h>
+#include <logjam/logobj.h>
 #include <logjam/parser.h>
 
 const char *bind_re =

@@ -39,7 +39,7 @@
 #include <jansson.h>
 
 #include <logjam/debug.h>
-#include <logjam/log.h>
+#include <logjam/logobj.h>
 #include <logjam/sender.h>
 #include <logjam/socket.h>
 

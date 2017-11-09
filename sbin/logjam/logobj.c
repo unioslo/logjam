@@ -36,7 +36,7 @@
 
 #include <jansson.h>
 
-#include <logjam/log.h>
+#include <logjam/logobj.h>
 
 lj_logobj *
 lj_logobj_create(void)

@@ -43,7 +43,7 @@
 #include <systemd/sd-journal.h>
 
 #include <logjam/ctype.h>
-#include <logjam/log.h>
+#include <logjam/logobj.h>
 #include <logjam/reader.h>
 #include <logjam/strlcat.h>
 #include <logjam/strlcpy.h>

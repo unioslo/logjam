@@ -27,8 +27,8 @@
  * SUCH DAMAGE.
  */
 
-#ifndef LOGJAM_LOG_H_INCLUDED
-#define LOGJAM_LOG_H_INCLUDED
+#ifndef LOGJAM_LOGOBJ_H_INCLUDED
+#define LOGJAM_LOGOBJ_H_INCLUDED
 
 #include <logjam/types.h>
 
