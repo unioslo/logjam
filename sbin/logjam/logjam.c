@@ -43,8 +43,8 @@
 
 #include <logjam/cirq.h>
 #include <logjam/config.h>
-#include <logjam/debug.h>
 #include <logjam/flume.h>
+#include <logjam/log.h>
 #include <logjam/logobj.h>
 #include <logjam/parser.h>
 #include <logjam/reader.h>
@@ -153,12 +153,12 @@ logstats(int clear)
 	uintmax_t nput, nget, ndrop;
 
 	cirq_stat(li_cirq, &nput, &nget, &ndrop, clear);
-	lj_debug(1, "i: put %zu get %zu drop %zu\n", nput, nget, ndrop);
+	lj_verbose("i: put %zu get %zu drop %zu", nput, nget, ndrop);
 	cirq_stat(lo_cirq, &nput, &nget, &ndrop, clear);
-	lj_debug(1, "o: put %zu get %zu drop %zu\n", nput, nget, ndrop);
+	lj_verbose("o: put %zu get %zu drop %zu", nput, nget, ndrop);
 }
 
-void
+int
 logjam(void)
 {
 	lj_flume *flume;
@@ -171,26 +171,26 @@ logjam(void)
 	signal(SIGUSR2, &sig_handler);
 
 	if ((flume = lj_configure(lj_config_file)) == NULL)
-		exit(1);
+		lj_fatal("no configuration");
 
 	if ((li_cirq = cirq_create(CIRQ_SIZE)) == NULL)
-		err(1, "failed to create input cirq");
+		lj_fatal("failed to create input cirq");
 	if ((lo_cirq = cirq_create(CIRQ_SIZE)) == NULL)
-		err(1, "failed to create output cirq");
+		lj_fatal("failed to create output cirq");
 
 	if ((r = pthread_create(&rthr, NULL, rthr_main, flume->rctx)) != 0) {
 		errno = r;
-		err(1, "failed to start reader thread");
+		lj_fatal("failed to start reader thread");
 	}
 
 	if ((r = pthread_create(&pthr, NULL, pthr_main, flume->pctx)) != 0) {
 		errno = r;
-		err(1, "failed to start parser thread");
+		lj_fatal("failed to start parser thread");
 	}
 
 	if ((r = pthread_create(&sthr, NULL, sthr_main, flume->sctx)) != 0) {
 		errno = r;
-		err(1, "failed to start sender thread");
+		lj_fatal("failed to start sender thread");
 	}
 
 	while (!quit) {
@@ -206,8 +206,10 @@ logjam(void)
 		}
 	}
 
+	lj_verbose("terminated");
 	pthread_join(rthr, NULL);
 	pthread_join(pthr, NULL);
 	pthread_join(sthr, NULL);
 	lj_flume_fini(flume);
+	return (0);
 }

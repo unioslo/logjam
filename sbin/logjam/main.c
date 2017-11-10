@@ -35,33 +35,73 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <logjam/logjam.h>
 #include <logjam/config.h>
+#include <logjam/log.h>
+#include <logjam/pidfile.h>
 
-int lj_debug_level;
+static const char *lj_pidfile = "/var/run/logjam.pid";
+static int lj_foreground = 0;
+
+static void
+daemonize(void)
+{
+	struct lj_pidfh *pidfh;
+	pid_t pid;
+
+	if ((pidfh = lj_pidfile_open(lj_pidfile, 0600, &pid)) == NULL) {
+		if (errno == EEXIST) {
+			lj_fatal("already running with PID %lu",
+			    (unsigned long)pid);
+		} else {
+			lj_fatal("unable to open or create pidfile %s: %s",
+			    lj_pidfile, strerror(errno));
+		}
+	}
+	if (daemon(0, 0) != 0)
+		lj_fatal("unable to daemonize: %s", strerror(errno));
+	lj_pidfile_write(pidfh);
+}
 
 static void
 usage(void)
 {
 
-	fprintf(stderr, "usage: logjam [-d] [-c config]\n");
+	fprintf(stderr, "usage: "
+	    "logjam [-dfv] [-c config] [-l logdest] [-p pidfile]\n");
 	exit(1);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int opt;
+	const char *logdest = NULL;
+	int opt, ret;
 
-	while ((opt = getopt(argc, argv, "c:d")) != -1)
+	while ((opt = getopt(argc, argv, "c:dfl:p:v")) != -1)
 		switch (opt) {
 		case 'c':
 			lj_config_file = optarg;
 			break;
 		case 'd':
-			++lj_debug_level;
+			if (lj_log_level > LJ_LOG_LEVEL_DEBUG)
+				lj_log_level = LJ_LOG_LEVEL_DEBUG;
+			break;
+		case 'f':
+			++lj_foreground;
+			break;
+		case 'l':
+			logdest = optarg;
+			break;
+		case 'p':
+			lj_pidfile = optarg;
+			break;
+		case 'v':
+			if (lj_log_level > LJ_LOG_LEVEL_VERBOSE)
+				lj_log_level = LJ_LOG_LEVEL_VERBOSE;
 			break;
 		default:
 			usage();
@@ -73,7 +113,13 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		usage();
 
-	logjam();
+	if (!lj_foreground)
+		daemonize();
 
-	exit(0);
+        lj_log_init("logjam", logdest ? logdest :
+	    lj_foreground ? NULL : "syslog:");
+        ret = logjam();
+        lj_log_exit();
+
+        exit(ret == 0 ? 0 : 1);
 }

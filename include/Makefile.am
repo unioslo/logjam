@@ -3,7 +3,6 @@ noinst_HEADERS = \
 	logjam/config.h \
 	logjam/connect.h \
 	logjam/ctype.h \
-	logjam/debug.h \
 	logjam/flopen.h \
 	logjam/flume.h \
 	logjam/log.h \

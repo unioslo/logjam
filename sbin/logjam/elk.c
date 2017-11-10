@@ -38,7 +38,7 @@
 
 #include <jansson.h>
 
-#include <logjam/debug.h>
+#include <logjam/log.h>
 #include <logjam/logobj.h>
 #include <logjam/sender.h>
 #include <logjam/socket.h>
@@ -129,7 +129,7 @@ lj_elk_json_callback(const char *buffer, size_t size, void *data)
 
 	if (size > SSIZE_MAX)
 		return (-1);
-	if (lj_debug_level > 1)
+	if (lj_log_level <= LJ_LOG_LEVEL_DEBUG)
 		fwrite(buffer, size, 1, stderr);
 	if (sock_write(ctx->sock, buffer, size) != (ssize_t)size)
 		return (-1);

@@ -30,6 +30,6 @@
 #ifndef LOGJAM_LOGJAM_H_INCLUDED
 #define LOGJAM_LOGJAM_H_INCLUDED
 
-void logjam(void);
+int logjam(void);
 
 #endif

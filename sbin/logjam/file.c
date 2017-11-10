@@ -46,7 +46,7 @@
 #include <unistd.h>
 
 #include <logjam/ctype.h>
-#include <logjam/debug.h>
+#include <logjam/log.h>
 #include <logjam/logobj.h>
 #include <logjam/reader.h>
 #include <logjam/strlcat.h>
@@ -162,7 +162,7 @@ lj_fillbuf(lj_file_ctx *ctx)
 	/* read more data into the buffer */
 	rlen = sizeof ctx->buf - ctx->len;
 	if ((rlen = read(ctx->fd, ctx->buf + ctx->len, rlen)) < 0) {
-		warn("%s", ctx->path);
+		lj_warning("%s: %s", ctx->path, strerror(errno));
 		return (rlen);
 	}
 	/* end of file */
@@ -171,7 +171,7 @@ lj_fillbuf(lj_file_ctx *ctx)
 		if (stat(ctx->path, &st) == 0) {
 			if (st.st_dev != ctx->st.st_dev ||
 			    st.st_ino != ctx->st.st_ino) {
-				lj_debug(1, "%s has been rotated\n", ctx->path);
+				lj_verbose("%s has been rotated", ctx->path);
 				raise(SIGUSR2);
 				if (lj_file_reopen(ctx, NULL) < 0)
 					return (-1);
@@ -212,7 +212,7 @@ lj_getline(lj_file_ctx *ctx)
 		if (ctx->pos == 0 && ctx->endl == sizeof ctx->buf) {
 			ctx->endl = ctx->len = 0;
 			errno = EMSGSIZE;
-			warn("%s", ctx->path);
+			lj_warning("%s: %s", ctx->path, strerror(errno));
 			return (NULL);
 		}
 		/* fill the buffer and loop back, unless error or EOF */
