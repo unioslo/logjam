@@ -91,7 +91,9 @@ lj_log_level_to_string(lj_log_level_t level)
 void
 lj_logv(lj_log_level_t level, const char *fmt, va_list ap)
 {
+	int serrno;
 
+	serrno = errno;
 	if (lj_logfile != NULL) {
 		fprintf(lj_logfile, "%s: %s: ", lj_prog_name,
 		    lj_log_level_to_string(level));
@@ -100,6 +102,7 @@ lj_logv(lj_log_level_t level, const char *fmt, va_list ap)
 	} else {
 		vsyslog(lj_log_level_to_syslog(level), fmt, ap);
 	}
+	errno = serrno;
 }
 
 /*
@@ -109,15 +112,12 @@ void
 lj_log(lj_log_level_t level, const char *fmt, ...)
 {
 	va_list ap;
-	int serrno;
 
-	serrno = errno;
 	if (level >= lj_log_level) {
 		va_start(ap, fmt);
 		lj_logv(level, fmt, ap);
 		va_end(ap);
 	}
-	errno = serrno;
 }
 
 void
