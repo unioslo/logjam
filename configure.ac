@@ -88,6 +88,8 @@ AC_CONFIG_FILES([
     lib/logjam/Makefile
     sbin/Makefile
     sbin/logjam/Makefile
+    rc/Makefile
+    rc/logjam.systemd
     t/Makefile
 ])
 AC_OUTPUT

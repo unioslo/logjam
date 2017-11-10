@@ -1,0 +1,20 @@
+# Install as /usr/lib/systemd/system/logjam.service
+
+[Unit]
+Description=Log parser and dispatcher
+Documentation=man:logjam(8)
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/logjam.pid
+Environment=CONFIG=@sysconfdir@/logjam.conf
+EnvironmentFile=/etc/sysconfig/logjam
+ExecStart=@sbindir@/logjam -c $CONFIG
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+
+[Install]
+WantedBy=multi-user.target
