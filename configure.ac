@@ -1,5 +1,5 @@
 AC_PREREQ([2.63])
-AC_INIT([logjam], [0.20171110])
+AC_INIT([logjam], [0.20171124])
 AC_CONFIG_SRCDIR([include/logjam/logjam.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign])
@@ -88,6 +88,7 @@ AC_CONFIG_FILES([
     lib/logjam/Makefile
     sbin/Makefile
     sbin/logjam/Makefile
+    sbin/logjam/logjam.8
     rc/Makefile
     rc/logjam.systemd
     t/Makefile
