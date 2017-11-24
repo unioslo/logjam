@@ -71,14 +71,14 @@ usage(void)
 {
 
 	fprintf(stderr, "usage: "
-	    "logjam [-dfv] [-c config] [-l logdest] [-p pidfile]\n");
+	    "logjam [-dfv] [-c config] [-l logspec] [-p pidfile]\n");
 	exit(1);
 }
 
 int
 main(int argc, char *argv[])
 {
-	const char *logdest = NULL;
+	const char *logspec = NULL;
 	int opt, ret;
 
 	while ((opt = getopt(argc, argv, "c:dfl:p:v")) != -1)
@@ -94,7 +94,7 @@ main(int argc, char *argv[])
 			++lj_foreground;
 			break;
 		case 'l':
-			logdest = optarg;
+			logspec = optarg;
 			break;
 		case 'p':
 			lj_pidfile = optarg;
@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 	if (!lj_foreground)
 		daemonize();
 
-        lj_log_init("logjam", logdest ? logdest :
+        lj_log_init("logjam", logspec ? logspec :
 	    lj_foreground ? NULL : "syslog:");
         ret = logjam();
         lj_log_exit();
