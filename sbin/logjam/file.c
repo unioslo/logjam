@@ -228,7 +228,7 @@ lj_file_read(lj_reader_ctx *rctx)
 	struct tm tm;
 	struct timeval tv;
 	lj_logline *ll;
-	const char *str, *date;
+	const char *str;
 	uint64_t when;
 
 	if ((str = lj_getline(ctx)) == NULL)
@@ -237,7 +237,6 @@ lj_file_read(lj_reader_ctx *rctx)
 	/* try to get the timestamp, fall back to current time */
 	when = 0;
 	if (ctx->datefmt != NULL) {
-		date = str;
 		str = lj_strptime(str, ctx->datefmt, &tm);
 		when = timelocal(&tm) * 1000000;
 	}
